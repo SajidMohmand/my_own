@@ -387,7 +387,7 @@ Widget _buildScrollableMetaDataTable(
               ),
               Expanded(
                 child: Text(
-                  'PRICE AED',
+                  'PRICE',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).brightness == Brightness.dark

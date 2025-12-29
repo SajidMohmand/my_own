@@ -15,7 +15,7 @@ const double gramFromOz = 1 / ozToGram; // 1 gm = 1 oz / 31.10348
 const double ttbInOz = 3.75;
 const double kiloInGram = 1000;
 
-const String apiKey = 'coDxJ4GeQM4MfgERDETEqY';
+const String apiKey = 'R9mUW0po3fMLgQKNPeRzTm1Fco';
 
 
 final liveRatesProvider =
