@@ -16,6 +16,9 @@ class NewsScreen extends ConsumerWidget {
     final timeFormat = DateFormat('HH:mm');
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text("News"),
+      ),
       body: SafeArea(
         child: Column(
           children: [

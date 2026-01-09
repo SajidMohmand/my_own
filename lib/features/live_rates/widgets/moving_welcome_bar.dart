@@ -14,22 +14,21 @@ class MovingWelcomeBar extends StatelessWidget {
     return Container(
       height: height,
       decoration: BoxDecoration(
-        gradient: isDark
-            ? LinearGradient(
-          begin: Alignment.bottomRight,
-          end: Alignment.topLeft,
-          colors: ConstantColor.gold_gradient,
-        )
-            : null,
-        color: isDark ? null : Colors.transparent,
+        // gradient: isDark
+        //     ? LinearGradient(
+        //   begin: Alignment.bottomRight,
+        //   end: Alignment.topLeft,
+        //   colors: ConstantColor.gold_gradient,
+        // )
+        //     : null,
+        color: isDark ? Color(0xff3E3F43) : Colors.transparent,
       ),
       clipBehavior: Clip.hardEdge,
       child: Marquee(
         text: 'Welcome to Amber Zahrat Jewellers    ',
         style: TextStyle(
-          fontSize: height * 0.35,
+          fontSize: height * 0.30,
           fontWeight: FontWeight.w900,
-          color: Colors.brown,
           letterSpacing: 1.2,
         ),
         scrollAxis: Axis.horizontal,

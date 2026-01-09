@@ -7,45 +7,107 @@ class AboutUsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        leadingWidth: 120,
-        leading: SizedBox(
-          width: 120, // give Row enough space
-          child: Padding(
-            padding: const EdgeInsets.only(left: 4),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                const SizedBox(width: 6),
-                const Icon(Icons.ice_skating_outlined),
-              ],
-            ),
-          ),
+        title: const Text(
+          'About Us',
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
-
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: Center(
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Company Name
+            Center(
               child: Text(
-                'About Us',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                'Amber Zahrat Jewellers',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.amber[800],
+                ),
               ),
             ),
-          ),
-        ],
-      ),
-      body: const Padding(
-        padding: EdgeInsets.all(16),
-        child: Text(
-          'This app provides metal prices, alerts, and market updates.\n\n'
-              'Version: 1.0.0',
-          style: TextStyle(fontSize: 16),
+            const SizedBox(height: 16),
+
+            // Subtitle
+            Center(
+              child: Text(
+                'Dubai Gold Souq • Established 1985',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[700],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Section Title
+            Text(
+              'Who We Are',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.amber[900],
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Description
+            Text(
+              'Amber Zahrat Jewellers is a trusted bullion gold wholesaler based in the heart of the Dubai Gold Souq. '
+                  'We specialize in the wholesale buying and selling of high-quality gold bullion, offering transparent pricing, reliability, and professional service to traders and businesses. '
+                  'With a strong presence in Dubai’s gold market, we are committed to integrity, accuracy, and long-term partnerships.',
+              style: const TextStyle(
+                fontSize: 16,
+                height: 1.6,
+              ),
+              textAlign: TextAlign.justify,
+            ),
+            const SizedBox(height: 24),
+
+            // Mission Statement
+            Text(
+              'Our Mission',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.amber[900],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'To be the most trusted partner in precious metals by delivering unparalleled value, security, and expertise to our global clientele.',
+              style: const TextStyle(
+                fontSize: 16,
+                fontStyle: FontStyle.italic,
+                height: 1.6,
+              ),
+              textAlign: TextAlign.justify,
+            ),
+            const SizedBox(height: 24),
+
+            // Contact Info
+            Text(
+              'Contact Us',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.amber[900],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '📍 Gold Souq - Al Khor St - Al Daghaya - Deira - Dubai\n'
+                  '📞 +971566923208\n'
+                  '✉️ amberjewellers2@gmail.com',
+              style: const TextStyle(
+                fontSize: 16,
+                height: 1.5,
+              ),
+            ),
+          ],
         ),
       ),
     );

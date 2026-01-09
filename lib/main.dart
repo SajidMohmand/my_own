@@ -1,13 +1,19 @@
+
+import 'package:banglatiger2/service/timezone_helper.dart';
+
 import './features/splash/splash_screen.dart';
 import './provider/theme_provider.dart';
-import './service/notification.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'features/home/home_screen.dart';
 
-void main() async{
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // await initializeNotifications();
+
+   initTimeZones();
+
+
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -161,6 +167,9 @@ class MyApp extends ConsumerWidget  {
   }
 
   ThemeData _buildDarkTheme() {
+    // 🎨 Define your new background color once
+    const Color _newDarkBackground = Color(0xFF020300); // Example: Darker blue-black
+
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
@@ -170,13 +179,13 @@ class MyApp extends ConsumerWidget  {
         primary: const Color(0xFFD4A76A), // Warm gold - main accent
         secondary: const Color(0xFF6AB7D4), // Cool blue - secondary accent
         tertiary: const Color(0xFFA6D4A7), // Muted green - tertiary accent
-        surface: const Color(0xFF1A1F2E), // Deep navy/charcoal
-        surfaceContainer: const Color(0xFF252B3C), // Lighter container
-        surfaceContainerHighest: const Color(0xFF2F364A), // Highest surface
-        surfaceVariant: const Color(0xFF2A3142), // Variant for cards
+        surface: const Color(0xFF020300), // Deep navy/charcoal
+        surfaceContainer: const Color(0xFF020300), // Lighter container
+        surfaceContainerHighest: const Color(0xFF020300), // Highest surface
+        surfaceVariant: const Color(0xFF020300), // Variant for cards
         inverseSurface: const Color(0xFFF0F2F5), // For contrast elements
-        outline: const Color(0xFF4A5568), // Borders and dividers
-        outlineVariant: const Color(0xFF3A4255), // Subtle borders
+        outline: const Color(0xFF020300), // Borders and dividers
+        outlineVariant: const Color(0xFF020300), // Subtle borders
         shadow: Colors.black.withOpacity(0.4),
         scrim: Colors.black.withOpacity(0.6),
         primaryContainer: const Color(0xFF3A2C1A), // Primary container
@@ -191,18 +200,19 @@ class MyApp extends ConsumerWidget  {
         onSurfaceVariant: const Color(0xFFC1C6D3), // Secondary text
         error: const Color(0xFFFF6B6B), // Soft red
         onError: Colors.black,
-        background: const Color(0xFF121826), // App background (darker than surface)
+        // background: const Color(0xFF121826), // App background (darker than surface)
+        background: _newDarkBackground, // App background (darker than surface)
         onBackground: const Color(0xFFE2E6EF),
       ),
 
       // Scaffold Background
-      scaffoldBackgroundColor: const Color(0xFF121826),
+      scaffoldBackgroundColor: _newDarkBackground,
 
       // AppBar Theme
       appBarTheme: AppBarTheme(
         centerTitle: true,
         elevation: 2,
-        backgroundColor: const Color(0xFF1A1F2E),
+        backgroundColor: _newDarkBackground,
         foregroundColor: const Color(0xFFE2E6EF),
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.black.withOpacity(0.3),
@@ -216,7 +226,7 @@ class MyApp extends ConsumerWidget  {
 
       // Bottom Navigation Bar
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: const Color(0xFF1A1F2E),
+        backgroundColor: _newDarkBackground,
         selectedItemColor: const Color(0xFFD4A76A),
         unselectedItemColor: const Color(0xFF8A95A7),
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),

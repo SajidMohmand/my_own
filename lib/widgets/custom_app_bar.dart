@@ -1,6 +1,10 @@
+import 'package:country_flags/country_flags.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:url_launcher/url_launcher.dart';
 
 import '../provider/theme_provider.dart';
 
@@ -10,29 +14,26 @@ class CustomAppBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
-    final timeFormat = DateFormat('hh:mm a');
-    final dateFormat = DateFormat('dd MMM yyyy');
     final screenHeight = MediaQuery.of(context).size.height;
-    final dayFormat = DateFormat('EEE');
 
     final isDark = themeMode == ThemeMode.dark ||
         (themeMode == ThemeMode.system &&
             MediaQuery.of(context).platformBrightness == Brightness.dark);
 
+    final timeFormat = DateFormat('hh:mm a');
+
+    final uaeTime = tz.TZDateTime.now(tz.getLocation('Asia/Dubai'));
+    final bdTime = tz.TZDateTime.now(tz.getLocation('Asia/Dhaka'));
+    final dateFormat = DateFormat('dd MMM yyyy');
+    final dayFormat = DateFormat('EEE');
+
     return Container(
-      margin: EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: screenHeight * 0.01,
-      ),
-      padding: EdgeInsets.symmetric(
-        horizontal: 20,
-        vertical: screenHeight * 0.015, // Slightly reduced for better fit
-      ),
+      height: screenHeight * 0.1,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withOpacity(0.05)
-            : Colors.white.withOpacity(0.8),
-        borderRadius: BorderRadius.circular(20),
+        color: isDark ? const Color(0xff020300) : Colors.white,
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: isDark
               ? Colors.white.withOpacity(0.1)
@@ -41,98 +42,151 @@ class CustomAppBar extends ConsumerWidget {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          /// TIME + DATE
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                timeFormat.format(DateTime.now()),
-                style: TextStyle(
-                  fontSize: screenHeight * 0.015,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-              SizedBox(height: screenHeight * 0.003),
-              Text(
-    '${dateFormat.format(DateTime.now())}\n${dayFormat.format(DateTime.now())}',// Mon, 26 Dec 2025
-                style: TextStyle(
-                  fontSize: screenHeight * 0.015,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withOpacity(0.6),
-                ),
-              ),
-            ],
-          ),
 
-          /// LOGO WITH TEXT
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                "assets/icon/splash_only.png",
-                height: screenHeight * 0.05, // slightly smaller
-                fit: BoxFit.contain,
-                filterQuality: FilterQuality.high,
-              ),
-              SizedBox(height: screenHeight * 0.003),
-              Text(
-                "AMBER ZAHRAT",
-                style: TextStyle(
-                  fontSize: screenHeight * 0.016,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.5,
-                  color: Theme.of(context).colorScheme.primary,
-                  height: 0.95, // slightly tighter
-                ),
-              ),
-              SizedBox(height: screenHeight * 0.004),
-              Text(
-                "JEWELLERS",
-                style: TextStyle(
-                  fontSize: screenHeight * 0.012,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 2.5,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                  height: 0.95, // slightly tighter
-                ),
-              ),
-            ],
-          ),
-
-
-          /// THEME TOGGLE
-          Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(12),
+          /// 🌍 LEFT — TIMES
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _timeRow(context, 'AE', uaeTime),
+                const SizedBox(height: 4),
+                _timeRow(context, 'BD', bdTime),
+              ],
             ),
-            child: IconButton(
-              icon: Icon(
-                isDark ? Icons.light_mode : Icons.dark_mode,
-                size: screenHeight * 0.024,
+          ),
+
+          /// 🖼 CENTER — LOGO
+          Image.asset(
+            'assets/icon/splash.png',
+            height: screenHeight * 0.25,
+            fit: BoxFit.contain,
+          ),
+
+          /// ⚙ RIGHT — ACTIONS
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _iconButton(
+                    context,
+                    icon: Icons.person,
+                    isFa: true,
+                    size: 50,
+                    circular: true,
+                    removeBg: true,
+                    onTap: () async {
+                      // your action here
+                    },
+                  ),
+
+                  _iconButton(
+                    context,
+                    icon: isDark ? Icons.light_mode : Icons.dark_mode,
+                    size: 30,
+                    onTap: () {
+                      ref.read(themeModeProvider.notifier).toggleTheme();
+                    },
+                  ),
+                ],
               ),
-              tooltip: isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
-              onPressed: () {
-                ref.read(themeModeProvider.notifier).toggleTheme();
-              },
             ),
           ),
         ],
       ),
     );
   }
+
+  Widget _timeRow(
+      BuildContext context,
+      String code,
+      DateTime dateTime,
+      ) {
+    final dateFormat = DateFormat('dd, MMM yyyy');
+    final timeFormat = DateFormat('hh:mma');
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipOval(
+          child: SizedBox(
+            height: 30, // Make height = width for perfect circle
+            width: 30,
+            child: CountryFlag.fromCountryCode(code),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              dateFormat.format(dateTime),
+              style: TextStyle(
+                fontSize: 11,
+                color: isDark
+                    ? Colors.white
+                    : Colors.black,
+              ),
+            ),
+            Text(
+              timeFormat.format(dateTime),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isDark
+                    ? Colors.white
+                    : Colors.black,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+
+  Widget _iconButton(
+      BuildContext context, {
+        required IconData icon,
+        required VoidCallback onTap,
+        Color? color, // background color
+        bool isFa = false,
+        double size = 30, // total tap area
+        bool circular = false, // make it circular
+        bool removeBg = false, // remove background
+      }) {
+    return SizedBox(
+      width: removeBg ? size-15 : size,
+      height: size,
+      child: Material(
+        color: removeBg ? Colors.transparent : (color ?? Theme.of(context).colorScheme.primaryContainer),
+        shape: circular ? const CircleBorder() : RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: circular ? null : BorderRadius.circular(12),
+          customBorder: circular ? const CircleBorder() : null,
+          child: Center(
+            child: isFa
+                ? FaIcon(icon, size: size * 0.6, color: removeBg ? Theme.of(context).iconTheme.color : Colors.white)
+                : Icon(icon, size: size * 0.6, color: removeBg ? Theme.of(context).iconTheme.color : Colors.white),
+          ),
+        ),
+      ),
+    );
+  }
+
 }

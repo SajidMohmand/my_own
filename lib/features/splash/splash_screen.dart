@@ -24,7 +24,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF40301E),
+      backgroundColor: Colors.black,
       body: Center(
         child: Image.asset(
           'assets/icon/splash.png',

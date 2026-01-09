@@ -1,14 +1,16 @@
+import 'package:banglatiger2/widgets/top_app_bar.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import './providers/live_rates_provider.dart';
 import './providers/live_rates_state.dart';
 import './widgets/moving_welcome_bar.dart';
 import '../../widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../core/constant_color.dart';
 import '../../models/metal_rate.dart';
-import '../../provider/theme_provider.dart';
 
 class LiveRatesScreen extends ConsumerWidget {
   const LiveRatesScreen({super.key});
@@ -17,7 +19,9 @@ class LiveRatesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(liveRatesProvider);
     final screenHeight = MediaQuery.of(context).size.height;
-
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    print("khan ${state.metals.length}");
+    print("khan error ${state.error}");
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -34,18 +38,33 @@ class LiveRatesScreen extends ConsumerWidget {
           child: Column(
             children: [
               SizedBox(height: screenHeight * 0.15, child: CustomAppBar()),
-              MovingWelcomeBar(height: screenHeight * 0.06),
 
+              SizedBox(height: 5),
+              TopAppBar(),
+
+              // In your LiveRatesScreen build method:
               Expanded(
-                child: state.isLoading
+                child:
+                     state.isLoading
                     ? _LiveRatesShimmer()
-                    : state.error != null
-                    ? Center(child: Text(state.error!))
                     : _buildBody(context, state, screenHeight),
               ),
             ],
           ),
         ),
+      ),
+
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Container(
+          //   width: double.infinity,
+          //   color: Color(0xff3E3F43),
+          //   child: Center(child: Text("Welcome to Amber Zahrat Jewellers")),
+          // ),
+          // MovingWelcomeBar(height: 2,)
+          MovingWelcomeBar(height: screenHeight * 0.045),
+        ],
       ),
     );
   }
@@ -55,12 +74,17 @@ class LiveRatesScreen extends ConsumerWidget {
     LiveRatesState state,
     double screenHeight,
   ) {
+    // Safety check: if metals list is empty or has fewer than 2 items, show loading
+    if (state.metals.isEmpty || state.metals.length < 2) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: 6),
 
           _buildLiveRates(
             context,
@@ -69,9 +93,8 @@ class LiveRatesScreen extends ConsumerWidget {
             screenHeight,
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 2),
 
-          // Scrollable table takes all remaining space
           Expanded(
             child: _buildScrollableMetaDataTable(
               context,
@@ -91,209 +114,269 @@ Widget _buildLiveRates(
   MetalRate silver,
   double screenHeight,
 ) {
-  TextStyle headerStyle = TextStyle(
-    fontSize: screenHeight * 0.02,
-    fontWeight: FontWeight.w900,
-    color: Colors.brown,
-  );
+  final isDark = Theme.of(context).brightness == Brightness.dark;
 
-  TextStyle labelStyle = TextStyle(
-    fontSize: screenHeight * 0.02,
-    fontWeight: FontWeight.bold,
-  );
+  TextStyle headerStyle = TextStyle(fontSize: screenHeight * 0.019);
 
-  Widget valueWithChange(
-    double value,
-    double change,
-    bool isPositive,
-    double screenHeight,
-  ) {
-    final color = isPositive ? Colors.green : Colors.red;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return SizedBox(
-      height: screenHeight * 0.085,
-
-      child: Column(
-        children: [
-          /// TOP 50% — VALUE
-          Expanded(
-            flex: 2,
-            child: Center(
-              child: Text(
-                value.toStringAsFixed(2),
-                style: TextStyle(
-                  fontSize: screenHeight * 0.021,
-                  fontWeight: FontWeight.w800,
-                  color: color,
+  return Column(
+    children: [
+      Container(
+        padding: EdgeInsets.only(left: 10, right: 10, top: 4, bottom: 2),
+        decoration: BoxDecoration(
+          color: isDark ? ConstantColor.live_screen_card_color : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(
+                8,
+              ), // 👈 radius for whole table
+              child: Table(
+                border: TableBorder.all(
+                  color: ConstantColor.live_screen_card_color,
+                  width: 1,
                 ),
-              ),
-            ),
-          ),
-
-          /// BOTTOM 50% — CHANGE
-          Expanded(
-            flex: 1,
-            child: Container(
-              width: double.infinity,
-              alignment: Alignment.center,
-
-              decoration: BoxDecoration(
-                // color: const Color(0xFFF9DF7B),
-                border: Border(
-                  top: BorderSide(
-                    color: Colors.black.withOpacity(0.25),
-                    width: 1,
-                  ),
-                ),
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(12),
-                ),
-                gradient: isDark
-                    ? LinearGradient(
-                        begin: Alignment.bottomRight,
-                        end: Alignment.topLeft,
-                        colors: ConstantColor.gold_gradient,
-                      )
-                    : null,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+                columnWidths: const {
+                  0: FlexColumnWidth(2),
+                  1: FlexColumnWidth(2),
+                  2: FlexColumnWidth(2),
+                },
                 children: [
-                  Icon(
-                    isPositive ? Icons.arrow_upward : Icons.arrow_downward,
-                    size: 14,
-                    color: color,
-                  ),
-                  const SizedBox(width: 2),
-                  Text(
-                    change.toStringAsFixed(2),
-                    style: TextStyle(
-                      fontSize: screenHeight * 0.016,
-                      fontWeight: FontWeight.w600,
-                      color: color,
-                    ),
+                  // Header
+                  TableRow(
+                    decoration: const BoxDecoration(color: Colors.black),
+                    children: [
+                      _tableHeaderCell('PRODUCT', headerStyle),
+                      _tableHeaderCell('BID (SELL)', headerStyle),
+                      _tableHeaderCell('ASK (BUY)', headerStyle),
+                    ],
                   ),
                 ],
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget metalRow({
-    required String name,
-    required MetalRate rate,
-    required bool isEven,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark
-        ? Colors.white.withOpacity(0.04)
-        : Colors.black.withOpacity(0.04);
-
-    return Container(
-      padding: EdgeInsets.symmetric(
-        vertical: screenHeight * 0.014,
-        horizontal: screenHeight * 0.01,
-      ),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Metal name (narrower now)
-          Expanded(flex: 1, child: Text(name, style: labelStyle)),
-
-          // BID
-          Expanded(
-            flex: 2,
-            child: borderedValue(
-              valueWithChange(
-                rate.bid,
-                rate.change,
-                rate.isPositive,
-                screenHeight,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(
+                8,
+              ), // 👈 radius for whole table
+              child: Table(
+                border: TableBorder.all(
+                  color: ConstantColor.live_screen_card_color,
+                  width: 1,
+                ),
+                columnWidths: const {
+                  0: FlexColumnWidth(2),
+                  1: FlexColumnWidth(2),
+                  2: FlexColumnWidth(2),
+                },
+                children: [
+                  // Header
+                  metalTableRow(
+                    metal: gold,
+                    isEven: true,
+                    isDark: isDark,
+                    context: context,
+                  ),
+                ],
               ),
             ),
-          ),
-          SizedBox(width: 20),
-
-          // ASK
-          Expanded(
-            flex: 2,
-            child: borderedValue(
-              valueWithChange(
-                rate.ask,
-                rate.change,
-                rate.isPositive,
-                screenHeight,
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
-    );
-  }
-
-  final isDark = Theme.of(context).brightness == Brightness.dark;
-
-
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      // Header
+      SizedBox(height: 2),
       Container(
+        padding: EdgeInsets.only(left: 10, right: 10, top: 2, bottom: 2),
         decoration: BoxDecoration(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(12),
-            topRight: Radius.circular(12),
-          ),
-          gradient: isDark
-              ? LinearGradient(
-                  begin: Alignment.bottomRight,
-                  end: Alignment.topLeft,
-                  colors: ConstantColor.gold_gradient,
-                )
-              : null,
+          color: isDark ? ConstantColor.live_screen_card_color : Colors.white,
+          borderRadius: BorderRadius.circular(10),
         ),
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            vertical: screenHeight * 0.008,
-            horizontal: screenHeight * 0.012,
-          ),
-          child: Row(
-            children: [
-              Text('Rate', textAlign: TextAlign.center, style: headerStyle),
-              Expanded(
-                flex: 2,
-                child: Text(
-                  '\$BID (SELL)',
-                  textAlign: TextAlign.center,
-                  style: headerStyle,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(
+                8,
+              ), // 👈 radius for whole table
+              child: Table(
+                border: TableBorder.all(
+                  color: ConstantColor.live_screen_card_color,
+                  width: 1,
                 ),
+                columnWidths: const {
+                  0: FlexColumnWidth(2),
+                  1: FlexColumnWidth(2),
+                  2: FlexColumnWidth(2),
+                },
+                children: [
+                  // Header
+                  TableRow(
+                    decoration: const BoxDecoration(color: Colors.black),
+                    children: [
+                      _tableHeaderCell('PRODUCT', headerStyle),
+                      _tableHeaderCell('BID (SELL)', headerStyle),
+                      _tableHeaderCell('ASK (BUY)', headerStyle),
+                    ],
+                  ),
+
+                  // Data row
+                ],
               ),
-              Expanded(
-                flex: 2,
-                child: Text(
-                  '\$ASK (BUY)',
-                  textAlign: TextAlign.center,
-                  style: headerStyle,
+            ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(
+                8,
+              ), // 👈 radius for whole table
+              child: Table(
+                border: TableBorder.all(
+                  color: ConstantColor.live_screen_card_color,
+                  width: 1,
                 ),
+                columnWidths: const {
+                  0: FlexColumnWidth(2),
+                  1: FlexColumnWidth(2),
+                  2: FlexColumnWidth(2),
+                },
+                children: [
+                  // Header
+                  metalTableRow(
+                    metal: silver,
+                    isEven: true,
+                    isDark: isDark,
+                    context: context,
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-
-      SizedBox(height: screenHeight * 0.008),
-
-      metalRow(name: 'GOLD \n OZ', rate: gold, isEven: true),
-
-      SizedBox(height: screenHeight * 0.008),
-
-      metalRow(name: 'SILVER \n OZ', rate: silver, isEven: false),
     ],
   );
+}
+
+Widget _tableHeaderCell(String text, TextStyle headerStyle) {
+  return Padding(
+    padding: const EdgeInsets.only(left: 5, right: 5, top: 5, bottom: 5),
+    child: Text(text, textAlign: TextAlign.center, style: headerStyle),
+  );
+}
+
+TableRow metalTableRow({
+  required MetalRate metal,
+  required bool isEven,
+  required bool isDark,
+  required BuildContext context,
+}) {
+  return TableRow(
+    decoration: BoxDecoration(color: isDark ? Colors.black : Colors.white),
+    children: [
+      _tableCell(metal.name, true, context, isDark),
+      _tableCell(
+        metal.bid.toStringAsFixed(2),
+        false,
+        context,
+        isDark,
+        low: metal.low,
+        high: metal.high,
+        change: metal.change,
+      ),
+      _tableCell(
+        metal.ask.toStringAsFixed(2),
+        false,
+        context,
+        isDark,
+        low: metal.low,
+        high: metal.high,
+        isBid: false,
+        change: metal.change,
+      ),
+    ],
+  );
+}
+
+Widget _tableCell(
+  String text,
+  bool isText,
+  BuildContext context,
+  bool isDark, {
+  double low = 0,
+  double high = 0,
+  bool isBid = true,
+  double change = 0,
+}) {
+  final displayText = text.contains('OZ')
+      ? text.replaceAll('OZ', '\nOZ')
+      : text;
+
+  Color valueColor;
+  if (change == 0) {
+    valueColor = Theme.of(context).colorScheme.onSurface;
+  } else {
+    valueColor = change > 0 ? Colors.green : Colors.red;
+  }
+
+  return isText
+      ? Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Text(
+            displayText,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        )
+      : Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              text,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: valueColor,
+              ),
+            ),
+
+            const SizedBox(height: 4),
+
+            Container(
+              height: 1.5,
+              width: double.infinity,
+              color: ConstantColor.live_screen_card_color,
+            ),
+
+            const SizedBox(height: 4),
+
+            Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      isBid ? "LOW" : "HIGH",
+                      style: const TextStyle(fontSize: 10),
+                    ),
+                    const SizedBox(width: 2),
+                    Icon(
+                      isBid ? Icons.arrow_drop_down : Icons.arrow_drop_up,
+                      color: isBid ? Colors.red : Colors.green,
+                      size: 18,
+                    ),
+                  ],
+                ),
+                Text(
+                  isBid ? low.toStringAsFixed(2) : high.toStringAsFixed(2),
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+          ],
+        );
 }
 
 Widget borderedValue(Widget child) {
@@ -315,174 +398,344 @@ Widget _buildScrollableMetaDataTable(
   double screenHeight,
 ) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
-  return Container(
-    decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(
-        color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-        width: 1.5,
+
+  TextStyle headerStyle = TextStyle(
+    fontSize: screenHeight * 0.015,
+    fontWeight: FontWeight.w900,
+    color: Colors.white,
+  );
+
+  return Column(
+    children: [
+      // Fixed Header
+      ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Table(
+          border: TableBorder.all(
+            color: isDark ? Colors.black : Colors.white,
+            width: 1,
+          ),
+          columnWidths: const {
+            0: FlexColumnWidth(2),
+            1: FlexColumnWidth(2),
+            2: FlexColumnWidth(2),
+          },
+          children: [
+            // Header
+            TableRow(
+              decoration: BoxDecoration(color: ConstantColor.gold_color),
+              children: [
+                _tableHeaderCell('METALS', headerStyle),
+                _tableHeaderCell('WEIGHT', headerStyle),
+                _tableHeaderCell('PRICE', headerStyle),
+              ],
+            ),
+          ],
+        ),
       ),
 
-      boxShadow: [
-        BoxShadow(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-          blurRadius: 10,
-          offset: const Offset(0, 5),
-        ),
-      ],
-    ),
-    child: Column(
-      children: [
-        // Fixed Header
-        Container(
-          padding: EdgeInsets.symmetric(
-            vertical: screenHeight * 0.02,
-            horizontal: screenHeight * 0.01,
-          ),
+      Expanded(
+        child: Container(
           decoration: BoxDecoration(
-            gradient: isDark
-                ? LinearGradient(
-                    begin: Alignment.bottomRight,
-                    end: Alignment.topLeft,
-                    colors: ConstantColor.gold_gradient,
-                  )
-                : null,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(14),
-              topRight: Radius.circular(14),
+            color: isDark ? Colors.black : Colors.white,
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Stack(
+              children: [
+                // Main scrollable content
+                SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    children: [
+                      // Your metal table
+                      Container(
+                        color: isDark
+                            ? ConstantColor.live_screen_card_color
+                            : null,
+                        child: Table(
+                          border: TableBorder.all(
+                            color: Colors.black,
+                            width: 1.5,
+                          ),
+                          columnWidths: const {
+                            0: FlexColumnWidth(2),
+                            1: FlexColumnWidth(2),
+                            2: FlexColumnWidth(2),
+                          },
+                          children: _buildMetalRows(
+                            metals,
+                            context,
+                            screenHeight,
+                          ),
+                        ),
+                      ),
+
+                      // Add your image at the bottom of the scrollable content
+                      Container(
+                        margin: const EdgeInsets.only(top: 16),
+                        height: screenHeight * 0.14, // 👈 smaller banner height
+                        width: double.infinity,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              // Background Image
+                              Image.asset(
+                                'assets/images/banner.jpg',
+                                fit: BoxFit.cover,
+                              ),
+
+                              // Dark overlay
+                              Container(color: Colors.black.withOpacity(0.5)),
+
+                              // Text
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    RichText(
+                                      text: const TextSpan(
+                                        children: [
+                                          TextSpan(
+                                            text: 'PRECIOUS ', // normal part
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              letterSpacing: 1.1,
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text: 'METALS', // golden part
+                                            style: TextStyle(
+                                              color: Color(
+                                                0xFFD4AF37,
+                                              ), // gold color
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              letterSpacing: 1.1,
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text: ' DEALER', // normal part
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              letterSpacing: 1.1,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    const Text(
+                                      'We Buy & Sell',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18, // 👈 reduced
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    RichText(
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      text: const TextSpan(
+                                        children: [
+                                          TextSpan(
+                                            text: 'GOLD & SILVER BARS ',
+                                            style: TextStyle(
+                                              color: Color(
+                                                0xFFFFD700,
+                                              ), // ⭐ Gold color
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text: 'at Best Prices',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Optional: Add a subtle gradient overlay at the bottom to hint there's more content
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  height: 50,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.5),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          child: Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: Text(
-                  'METALS',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white
-                        : Theme.of(context).colorScheme.primary,
-
-                    letterSpacing: 1,
-                    fontSize: screenHeight * 0.018,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  'WEIGHT',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white
-                        : Theme.of(context).colorScheme.primary,
-
-                    letterSpacing: 1,
-                    fontSize: screenHeight * 0.018,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  'PRICE',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white
-                        : Theme.of(context).colorScheme.primary,
-
-                    letterSpacing: 1,
-                    fontSize: screenHeight * 0.018,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
-          ),
         ),
-
-        // Scrollable body
-        Expanded(
-          child: ListView.builder(
-            physics: const BouncingScrollPhysics(),
-            itemCount: metals.length - 2,
-            itemBuilder: (context, index) {
-              return _buildMetalRow(
-                context,
-                metals[index + 2], // start from index 2
-                index + 2,
-                screenHeight,
-              );
-            },
-          ),
-        ),
-
-      ],
-    ),
+      ),
+    ],
   );
 }
 
-Widget _buildMetalRow(
+Color getPriceColor(double current, double previous) {
+  if (current > previous) {
+    return Colors.green;
+  } else if (current < previous) {
+    return Colors.red;
+  }
+  return Colors.white; // no change
+}
+
+List<TableRow> _buildMetalRows(
+  List<MetalRate> metals,
   BuildContext context,
-  MetalRate metal,
-  int index,
   double screenHeight,
 ) {
-  return Container(
-    padding: EdgeInsets.symmetric(
-      vertical: screenHeight * 0.015,
-      horizontal: screenHeight * 0.01,
-    ),
-    decoration: BoxDecoration(
-      color: index.isEven
-          ? Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withOpacity(0.3)
-          : Colors.transparent,
-      border: Border(
-        top: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.5)),
+  // Safety check: if metals list has fewer than 2 items, return empty list
+  if (metals.length < 2) {
+    return [];
+  }
+  
+  return List.generate(metals.length - 2, (index) {
+    final metal = metals[index + 2];
+    return TableRow(
+      decoration: BoxDecoration(
+        color: index.isEven
+            ? Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest.withOpacity(0.3)
+            : Colors.transparent,
       ),
-    ),
-    child: Row(
       children: [
-        Expanded(
-          flex: 2,
+        // Metal Name - Reduced vertical padding
+        Padding(
+          padding: EdgeInsets.symmetric(
+            vertical: screenHeight * 0.008, // Reduced from 0.015
+            horizontal: screenHeight * 0.008, // Reduced from 0.01
+          ),
+          child: _buildMetalName(metal, screenHeight),
+        ),
+
+        // Weight - Reduced vertical padding
+        Padding(
+          padding: EdgeInsets.symmetric(
+            vertical: screenHeight * 0.008, // Reduced from 0.015
+            horizontal: screenHeight * 0.008, // Reduced from 0.01
+          ),
           child: Text(
-            metal.name,
+            metal.weight.toString(),
             style: TextStyle(
-              fontSize: screenHeight * 0.018,
-              fontWeight: FontWeight.bold,
+              fontSize: screenHeight * 0.013, // Reduced from 0.016
+              fontWeight: FontWeight.w900,
             ),
+            textAlign: TextAlign.center,
           ),
         ),
-        Expanded(
-          child: Center(
-            child: Text(
-              metal.weight.toString(),
-              style: TextStyle(
-                fontSize: screenHeight * 0.016,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            ),
+
+        // Price - Reduced vertical padding
+        Padding(
+          padding: EdgeInsets.symmetric(
+            vertical: screenHeight * 0.008, // Reduced from 0.015
+            horizontal: screenHeight * 0.008, // Reduced from 0.01
           ),
-        ),
-        Expanded(
           child: Text(
-            metal.price.toStringAsFixed(2).toString(),
+            metal.price.toStringAsFixed(2),
             style: TextStyle(
-              fontSize: screenHeight * 0.018,
-              fontWeight: FontWeight.bold,
+              fontSize: screenHeight * 0.014,
+              fontWeight: FontWeight.w900,
+              color: metal.change == 0
+                  ? Theme.of(context).colorScheme.onSurface
+                  : metal.isPositive
+                  ? Colors.green
+                  : Colors.red,
             ),
             textAlign: TextAlign.center,
           ),
         ),
       ],
+    );
+  });
+}
+
+Widget _buildMetalName(MetalRate metal, double screenHeight) {
+  if (!_isSpecialMetal(metal.name)) {
+    return Text(
+      metal.name,
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        fontSize: screenHeight * 0.014, // Reduced from 0.018
+        fontWeight: FontWeight.w900,
+      ),
+    );
+  }
+
+  // Split name
+  final parts = metal.name.split(' ');
+  final main = parts.first; // GOLD / SILVER
+  final rest = metal.name.replaceFirst(main, '').trim();
+
+  return RichText(
+    textAlign: TextAlign.center,
+    text: TextSpan(
+      children: [
+        TextSpan(
+          text: '$main\n',
+          style: TextStyle(
+            fontSize: screenHeight * 0.014, // Reduced from 0.018
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        TextSpan(
+          text: rest,
+          style: TextStyle(
+            fontSize: screenHeight * 0.011, // Reduced from 0.014
+            fontWeight: FontWeight.w600,
+            color: Color(0xff987B2F),
+          ),
+        ),
+      ],
     ),
   );
+}
+
+bool _isSpecialMetal(String name) {
+  const keywords = [
+    'KILO BAR 99',
+    'KILO BAR 999',
+    'KILO BAR 995',
+    'TEN TOLA',
+    'KILO',
+  ];
+
+  return keywords.any((k) => name.contains(k));
 }
 
 class _LiveRatesShimmer extends StatelessWidget {

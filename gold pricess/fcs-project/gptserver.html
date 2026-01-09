@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Gold Price Live</title>
+<style>
+body { font-family: Arial; padding: 20px; text-align: center; background: #f9f9f9; }
+table { margin: 0 auto; border-collapse: collapse; background: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+th, td { padding: 12px 20px; border: 1px solid #ddd; }
+th { background: #4CAF50; color: white; }
+#status { margin-top: 15px; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h1>Gold Price Live</h1>
+<div id="status">Connecting...</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Symbol</th>
+      <th>Bid</th>
+      <th>Ask</th>
+      <th>High</th>
+      <th>Low</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>XAU/USD</td>
+      <td id="bid">-</td>
+      <td id="ask">-</td>
+      <td id="high">-</td>
+      <td id="low">-</td>
+    </tr>
+  </tbody>
+</table>
+
+<script>
+const ws = new WebSocket('ws://94.136.187.60:3294'); // replace with VPS IP if needed
+
+const bidCell = document.getElementById('bid');
+const askCell = document.getElementById('ask');
+const highCell = document.getElementById('high');
+const lowCell = document.getElementById('low');
+const statusDiv = document.getElementById('status');
+
+ws.onopen = () => statusDiv.textContent = "Connected";
+
+ws.onclose = () => {
+  statusDiv.textContent = "Disconnected. Reconnecting...";
+  setTimeout(() => location.reload(), 5000);
+};
+
+ws.onerror = (err) => {
+  console.error(err);
+  statusDiv.textContent = "Connection error!";
+};
+
+ws.onmessage = (msg) => {
+  try {
+    const data = JSON.parse(msg.data);
+    if (data.type === 'prices' && data.prices.length > 0) {
+      const gold = data.prices[0];
+      bidCell.textContent = gold.bid.toFixed(2);
+      askCell.textContent = gold.ask.toFixed(2);
+      highCell.textContent = gold.high.toFixed(2);
+      lowCell.textContent = gold.low.toFixed(2);
+    }
+  } catch(e) {
+    console.error("Invalid message:", msg.data);
+  }
+};
+</script>
+
+</body>
+</html>

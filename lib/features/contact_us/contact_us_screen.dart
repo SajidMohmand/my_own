@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../widgets/custom_app_bar.dart';
 
@@ -30,20 +31,28 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen>
 
     _detailsCardAnimations = List.generate(
       3,
-          (index) => Tween<double>(begin: 0, end: 1).animate(
+      (index) => Tween<double>(begin: 0, end: 1).animate(
         CurvedAnimation(
           parent: _fadeController,
-          curve: Interval(index * 0.15, index * 0.15 + 0.5, curve: Curves.easeOutCubic),
+          curve: Interval(
+            index * 0.15,
+            index * 0.15 + 0.5,
+            curve: Curves.easeOutCubic,
+          ),
         ),
       ),
     );
 
     _emailsCardAnimations = List.generate(
       3,
-          (index) => Tween<double>(begin: 0, end: 1).animate(
+      (index) => Tween<double>(begin: 0, end: 1).animate(
         CurvedAnimation(
           parent: _fadeController,
-          curve: Interval(index * 0.15, index * 0.15 + 0.5, curve: Curves.easeOutCubic),
+          curve: Interval(
+            index * 0.15,
+            index * 0.15 + 0.5,
+            curve: Curves.easeOutCubic,
+          ),
         ),
       ),
     );
@@ -65,6 +74,18 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen>
     super.dispose();
   }
 
+  Future<void> _openUrl(String url) async {
+    final uri = Uri.parse(url);
+
+    if (!await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication, // 👈 THIS IS IMPORTANT
+    )) {
+      throw 'Could not launch $url';
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -84,11 +105,18 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen>
         child: SafeArea(
           child: Column(
             children: [
-              const CustomAppBar(),
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.14,
+                child: const CustomAppBar(),
+              ),
+
 
               /// TAB BAR
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 child: Container(
                   decoration: BoxDecoration(
                     color: theme.cardColor,
@@ -106,7 +134,8 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen>
                   child: TabBar(
                     controller: _tabController,
                     labelColor: theme.colorScheme.onPrimary,
-                    unselectedLabelColor: theme.textTheme.bodyMedium!.color!.withOpacity(0.7),
+                    unselectedLabelColor: theme.textTheme.bodyMedium!.color!
+                        .withOpacity(0.7),
                     labelStyle: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
@@ -171,10 +200,22 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen>
             backgroundColor: Colors.blue[600],
             child: const Icon(Icons.phone_rounded, color: Colors.white),
           ),
-          title: Text('Customer Service', style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
-          subtitle: Text('+1 (555) 123-4567', style: TextStyle(color: subTextColor)),
-          onTap: () {},
-          contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+          title: Text(
+            'Customer Service',
+            style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+          ),
+          subtitle: Text(
+            '+97 1566923208',
+            style: TextStyle(color: subTextColor),
+          ),
+          onTap: () async {
+            final uri = Uri(scheme: 'tel', path: '+971566923208');
+            if (await canLaunchUrl(uri)) await launchUrl(uri);
+          },
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 8,
+            horizontal: 0,
+          ),
         ),
         const Divider(height: 24),
         ListTile(
@@ -182,10 +223,21 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen>
             backgroundColor: Colors.orange[600],
             child: const Icon(Icons.email_rounded, color: Colors.white),
           ),
-          title: Text('Email Support', style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
-          subtitle: Text('support@metalsapp.com', style: TextStyle(color: subTextColor)),
-          onTap: () {},
-          contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+          title: Text(
+            'Email Support',
+            style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+          ),
+          subtitle: Text(
+            'amberjewellers2@gmail.com',
+            style: TextStyle(color: subTextColor),
+          ),
+          onTap: () async {
+            _openUrl('mailto:amberjewellers2@gmail.com');
+          },
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 8,
+            horizontal: 0,
+          ),
         ),
         const Divider(height: 24),
         ListTile(
@@ -193,11 +245,33 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen>
             backgroundColor: Colors.red[600],
             child: const Icon(Icons.location_on_rounded, color: Colors.white),
           ),
-          title: Text('Our Location', style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
-          subtitle: Text('123 Financial District\nNew York, NY 10001', style: TextStyle(color: subTextColor)),
-          onTap: () {},
-          contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+          title: Text(
+            'Our Location',
+            style: TextStyle(
+              color: textColor,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          subtitle: Text(
+            'Amber Zahrat Jewellers L.L.C\n'
+                'MAJD ALKHATIB BUILDING\n'
+                'Shop No: R-3\n'
+                'Gold Souq - Al Khor St - Al Daghaya\n'
+                'Deira, Dubai',
+            style: TextStyle(
+              color: subTextColor,
+              height: 1.4,
+            ),
+          ),
+          onTap: () {
+            _openUrl('https://maps.app.goo.gl/AFQNHHhk5KUfa2Jb7?g_st=ipc');
+          },
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 10,
+            horizontal: 0,
+          ),
         ),
+
       ],
     );
   }
@@ -220,42 +294,33 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen>
             ),
           ),
         ),
-        ListTile(
-          leading: CircleAvatar(
-            backgroundColor: Colors.green[600],
-            child: const Icon(Icons.point_of_sale_rounded, color: Colors.white),
-          ),
-          title: Text('Sales Department', style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
-          subtitle: Text('sales@metalsapp.com', style: TextStyle(color: subTextColor)),
-          onTap: () {},
-          contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
-        ),
-        const Divider(height: 24),
+
         ListTile(
           leading: CircleAvatar(
             backgroundColor: Colors.orange[600],
             child: const Icon(Icons.support_agent_rounded, color: Colors.white),
           ),
-          title: Text('Support Team', style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
-          subtitle: Text('support@metalsapp.com', style: TextStyle(color: subTextColor)),
-          onTap: () {},
-          contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
-        ),
-        const Divider(height: 24),
-        ListTile(
-          leading: CircleAvatar(
-            backgroundColor: Colors.purple[600],
-            child: const Icon(Icons.people_rounded, color: Colors.white),
+          title: Text(
+            'Support Team',
+            style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
           ),
-          title: Text('Human Resources', style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
-          subtitle: Text('hr@metalsapp.com', style: TextStyle(color: subTextColor)),
-          onTap: () {},
-          contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+          subtitle: Text(
+            'amberjewellers2@gmail.com',
+            style: TextStyle(color: subTextColor),
+          ),
+          onTap: () async {
+
+            _openUrl('amberjewellers2@gmail.com');
+          },
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 8,
+            horizontal: 0,
+          ),
         ),
+
       ],
     );
   }
-
 }
 
 /// _ScaleOnTapCard remains unchanged
@@ -263,10 +328,7 @@ class _ScaleOnTapCard extends StatefulWidget {
   final Widget child;
   final VoidCallback onTap;
 
-  const _ScaleOnTapCard({
-    required this.child,
-    required this.onTap,
-  });
+  const _ScaleOnTapCard({required this.child, required this.onTap});
 
   @override
   State<_ScaleOnTapCard> createState() => _ScaleOnTapCardState();
@@ -304,10 +366,7 @@ class _ScaleOnTapCardState extends State<_ScaleOnTapCard>
         widget.onTap();
       },
       onTapCancel: () => _scaleController.reverse(),
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: widget.child,
-      ),
+      child: ScaleTransition(scale: _scaleAnimation, child: widget.child),
     );
   }
 }

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Live Gold & Silver Prices</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #0f172a;
+        color: #e5e7eb;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 420px;
+        background: #020617;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 0 30px rgba(0,0,0,0.6);
+    }
+
+    h1 {
+        text-align: center;
+        margin-bottom: 10px;
+        font-size: 22px;
+    }
+
+    #status {
+        text-align: center;
+        font-size: 14px;
+        margin-bottom: 15px;
+    }
+
+    .card {
+        background: #020617;
+        border: 1px solid #1e293b;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 12px;
+    }
+
+    .symbol {
+        font-size: 18px;
+        margin-bottom: 10px;
+        font-weight: bold;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .label {
+        font-size: 12px;
+        color: #94a3b8;
+    }
+
+    .value {
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    .time {
+        text-align: right;
+        font-size: 11px;
+        margin-top: 8px;
+        color: #64748b;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Live Gold & Silver</h1>
+    <div id="status">🔴 Connecting...</div>
+
+    <!-- GOLD -->
+    <div class="card">
+        <div class="symbol">🟡 Gold (XAUUSD)</div>
+        <div class="grid">
+            <div>
+                <div class="label">Bid</div>
+                <div class="value" id="gold-bid">--</div>
+            </div>
+            <div>
+                <div class="label">Ask</div>
+                <div class="value" id="gold-ask">--</div>
+            </div>
+            <div>
+                <div class="label">High</div>
+                <div class="value" id="gold-high">--</div>
+            </div>
+            <div>
+                <div class="label">Low</div>
+                <div class="value" id="gold-low">--</div>
+            </div>
+        </div>
+        <div class="time" id="gold-time">--</div>
+    </div>
+
+    <!-- SILVER -->
+    <div class="card">
+        <div class="symbol">⚪ Silver (XAGUSD)</div>
+        <div class="grid">
+            <div>
+                <div class="label">Bid</div>
+                <div class="value" id="silver-bid">--</div>
+            </div>
+            <div>
+                <div class="label">Ask</div>
+                <div class="value" id="silver-ask">--</div>
+            </div>
+            <div>
+                <div class="label">High</div>
+                <div class="value" id="silver-high">--</div>
+            </div>
+            <div>
+                <div class="label">Low</div>
+                <div class="value" id="silver-low">--</div>
+            </div>
+        </div>
+        <div class="time" id="silver-time">--</div>
+    </div>
+</div>
+
+<script>
+    const WS_URL = "ws://localhost:3294"; // change this
+
+    let ws;
+    let attempts = 0;
+    const maxDelay = 15000;
+
+    const statusEl = document.getElementById("status");
+
+    function connect() {
+        ws = new WebSocket(WS_URL);
+
+        ws.onopen = () => {
+            attempts = 0;
+            statusEl.textContent = "🟢 Live";
+            statusEl.style.color = "#22c55e";
+        };
+
+        ws.onmessage = (e) => {
+            const msg = JSON.parse(e.data);
+            if (!msg.prices) return;
+
+            msg.prices.forEach(p => {
+                if (p.symbol === "XAUUSD") update("gold", p);
+                if (p.symbol === "XAGUSD") update("silver", p);
+            });
+        };
+
+        ws.onclose = () => reconnect();
+        ws.onerror = () => ws.close();
+    }
+
+    function reconnect() {
+        attempts++;
+        statusEl.textContent = "🔴 Reconnecting...";
+        statusEl.style.color = "#f87171";
+
+        const delay = Math.min(1000 * 2 ** attempts, maxDelay);
+        setTimeout(connect, delay);
+    }
+
+    function update(type, p) {
+        document.getElementById(`${type}-bid`).textContent = p.bid.toFixed(2);
+        document.getElementById(`${type}-ask`).textContent = p.ask.toFixed(2);
+        document.getElementById(`${type}-high`).textContent = p.high.toFixed(2);
+        document.getElementById(`${type}-low`).textContent = p.low.toFixed(2);
+        document.getElementById(`${type}-time`).textContent =
+            new Date(p.time * 1000).toLocaleTimeString();
+    }
+
+    connect();
+</script>
+
+</body>
+</html>

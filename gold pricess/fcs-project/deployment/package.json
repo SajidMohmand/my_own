@@ -1,0 +1,9 @@
+{
+  "name": "fcs-ws-relay",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "ws": "^8.18.3"
+  }
+}
