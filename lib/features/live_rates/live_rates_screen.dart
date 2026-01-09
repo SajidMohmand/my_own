@@ -1,7 +1,9 @@
+import 'package:banglatiger2/features/live_rates/tab_product_screen.dart';
 import 'package:banglatiger2/widgets/top_app_bar.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../more/product_screen.dart';
 import './providers/live_rates_provider.dart';
 import './providers/live_rates_state.dart';
 import './widgets/moving_welcome_bar.dart';
@@ -12,16 +14,36 @@ import 'package:shimmer/shimmer.dart';
 import '../../core/constant_color.dart';
 import '../../models/metal_rate.dart';
 
-class LiveRatesScreen extends ConsumerWidget {
+class LiveRatesScreen extends ConsumerStatefulWidget {
   const LiveRatesScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LiveRatesScreen> createState() => _LiveRatesScreenState();
+}
+
+class _LiveRatesScreenState extends ConsumerState<LiveRatesScreen>
+    with SingleTickerProviderStateMixin {
+
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(liveRatesProvider);
     final screenHeight = MediaQuery.of(context).size.height;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    print("khan ${state.metals.length}");
-    print("khan error ${state.error}");
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -40,14 +62,28 @@ class LiveRatesScreen extends ConsumerWidget {
               SizedBox(height: screenHeight * 0.15, child: CustomAppBar()),
 
               SizedBox(height: 5),
-              TopAppBar(),
-
+              TopAppBar(
+                selectedIndex: _tabController.index,
+                onTabChanged: (index) {
+                  _tabController.animateTo(index);
+                  setState(() {});
+                },
+              ),
               // In your LiveRatesScreen build method:
               Expanded(
-                child:
-                     state.isLoading
-                    ? _LiveRatesShimmer()
-                    : _buildBody(context, state, screenHeight),
+                child: TabBarView(
+                  controller: _tabController,
+                  physics: const BouncingScrollPhysics(),
+                  children: [
+                    /// Live Rates Screen
+                    state.isLoading
+                        ? _LiveRatesShimmer()
+                        : _buildBody(context, state, screenHeight),
+
+                    /// Products Screen
+                    ProductsTab(), // ← your products UI
+                  ],
+                ),
               ),
             ],
           ),

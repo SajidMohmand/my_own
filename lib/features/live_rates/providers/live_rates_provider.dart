@@ -81,7 +81,6 @@ class LiveRatesNotifier extends Notifier<LiveRatesState> {
             (message) {
               if (!ref.mounted) return;
 
-              print(message);
           try {
             final data = json.decode(message);
 
@@ -120,15 +119,11 @@ class LiveRatesNotifier extends Notifier<LiveRatesState> {
                 }
               }
 
-              print("_xauUsd: $_xauUsd");
-              print("_xagUsd: $_xagUsd");
 
               // Only initialize data if metals list is empty AND we have gold price
               if (state.metals.isEmpty && _xauUsd > 0) {
-                print("state is empty");
                 _initializeData();
               } else if (state.metals.isNotEmpty) {
-                print("state is not empty");
 
                 // Update existing data
                 _updateHighLow(goldHigh, goldLow, silverHigh, silverLow);

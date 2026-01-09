@@ -3,14 +3,19 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 
-
 class TopAppBar extends StatelessWidget {
-  const TopAppBar({super.key});
+  final int selectedIndex;
+  final ValueChanged<int> onTabChanged;
+
+  const TopAppBar({
+    super.key,
+    required this.selectedIndex,
+    required this.onTabChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -18,22 +23,52 @@ class TopAppBar extends StatelessWidget {
         builder: (context, constraints) {
           final isSmall = constraints.maxWidth < 360;
 
+          Widget tab({
+            required String title,
+            required bool active,
+            required VoidCallback onTap,
+            BorderRadius? radius,
+          }) {
+            return GestureDetector(
+              onTap: onTap,
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isSmall ? 8 : 12,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: active
+                      ? const Color(0xFF967B2E)
+                      : isDark
+                      ? Colors.white
+                      : Colors.transparent,
+                  borderRadius: radius,
+                ),
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: isSmall ? 12 : 14,
+                    fontWeight: FontWeight.bold,
+                    color: active
+                        ? Colors.white
+                        : isDark
+                        ? const Color(0xFF967B2E)
+                        : Colors.white,
+                  ),
+                ),
+              ),
+            );
+          }
+
           return Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Left icon
-              SizedBox(width: 30),
+              const SizedBox(width: 30),
+
+              // Phone
               GestureDetector(
                 onTap: () async {
-                  final Uri phoneUri = Uri(scheme: 'tel', path: '+971123456789'); // Replace with your phone number
-                  if (await canLaunchUrl(phoneUri)) {
-                    await launchUrl(phoneUri);
-                  } else {
-                    // Handle error, maybe show a snackbar
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Cannot make a call')),
-                    );
-                  }
+                  final uri = Uri(scheme: 'tel', path: '+971123456789');
+                  await launchUrl(uri);
                 },
                 child: Icon(
                   Icons.phone_in_talk,
@@ -42,60 +77,28 @@ class TopAppBar extends StatelessWidget {
                 ),
               ),
 
-              // Center content
+              // Center Tabs
               Expanded(
                 child: Center(
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isSmall ? 8 : 12,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white
-                              : Colors.transparent,
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(6),
-                            bottomLeft: Radius.circular(6),
-                          ),
-                        ),
-                        child: Text(
-                          "LIVE RATES",
-                          style: TextStyle(
-                            fontSize: isSmall ? 12 : 14,
-                            fontWeight: FontWeight.bold,
-                            color: isDark
-                                ? const Color(0xFF967B2E)
-                                : Colors.white,
-                          ),
+                      tab(
+                        title: "LIVE RATES",
+                        active: selectedIndex == 0,
+                        onTap: () => onTabChanged(0),
+                        radius: const BorderRadius.only(
+                          topLeft: Radius.circular(6),
+                          bottomLeft: Radius.circular(6),
                         ),
                       ),
-
-                      // PRODUCTS
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isSmall ? 8 : 12,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? const Color(0xFF967B2E)
-                              : Colors.transparent,
-                          borderRadius: const BorderRadius.only(
-                            topRight: Radius.circular(6),
-                            bottomRight: Radius.circular(6),
-                          ),
-                        ),
-                        child: Text(
-                          "PRODUCTS",
-                          style: TextStyle(
-                            fontSize: isSmall ? 12 : 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                      tab(
+                        title: "PRODUCTS",
+                        active: selectedIndex == 1,
+                        onTap: () => onTabChanged(1),
+                        radius: const BorderRadius.only(
+                          topRight: Radius.circular(6),
+                          bottomRight: Radius.circular(6),
                         ),
                       ),
                     ],
@@ -103,19 +106,17 @@ class TopAppBar extends StatelessWidget {
                 ),
               ),
 
-              // Right icon
+              // WhatsApp
               InkWell(
-                onTap: () {
-                  openWhatsapp();
-                },
-                child: Icon(
+                onTap: openWhatsapp,
+                child: const Icon(
                   FontAwesomeIcons.whatsapp,
                   color: Colors.green,
-                  size: isSmall ? 22 : 26,
+                  size: 26,
                 ),
               ),
 
-              SizedBox(width: 30),
+              const SizedBox(width: 30),
             ],
           );
         },
@@ -127,11 +128,10 @@ class TopAppBar extends StatelessWidget {
     final phone = "971566923208";
     final message = "Hello, I want more information";
 
-    final Uri appUri = Uri.parse(
+    final appUri = Uri.parse(
       "whatsapp://send?phone=$phone&text=${Uri.encodeComponent(message)}",
     );
-
-    final Uri webUri = Uri.parse(
+    final webUri = Uri.parse(
       "https://wa.me/$phone?text=${Uri.encodeComponent(message)}",
     );
 
@@ -141,5 +141,4 @@ class TopAppBar extends StatelessWidget {
       await launchUrl(webUri, mode: LaunchMode.externalApplication);
     }
   }
-
 }

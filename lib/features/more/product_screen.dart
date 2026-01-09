@@ -34,8 +34,6 @@ class ProductScreen extends StatelessWidget {
               child: CustomAppBar(), // Assuming CustomAppBar is defined elsewhere
             ),
 
-            SizedBox(height: 5),
-            TopAppBar(),
 
             SizedBox(height: 12),
 
