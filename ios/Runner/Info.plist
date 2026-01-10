@@ -48,16 +48,38 @@
 
 	<key>NSAppTransportSecurity</key>
     <dict>
+        <!-- Allow HTTP + ws:// sockets -->
         <key>NSAllowsArbitraryLoads</key>
         <true/>
+
+        <key>NSAllowsArbitraryLoadsInWebContent</key>
+        <true/>
+
+        <key>NSExceptionDomains</key>
+        <dict>
+            <key>94.136.187.60</key>
+            <dict>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+                <key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+                <key>NSExceptionRequiresForwardSecrecy</key>
+                <false/>
+            </dict>
+        </dict>
     </dict>
 
+<key>UIBackgroundModes</key>
+<array>
+    <string>fetch</string>
+    <string>processing</string>
+    <string>remote-notification</string>
+</array>
 
-<key>NSAppTransportSecurity</key>
-<dict>
-  <key>NSAllowsArbitraryLoads</key>
-  <true/>
-</dict>
+
+
 
 </dict>
 </plist>
