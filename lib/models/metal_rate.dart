@@ -54,6 +54,8 @@ class MetalRate {
   }
 
 
+
+
 }
 
 extension MetalRateHelper on MetalRate {

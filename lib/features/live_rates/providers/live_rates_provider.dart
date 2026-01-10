@@ -10,17 +10,28 @@ const double ozToGram = 31.10348;
 const double gramFromOz = 1 / ozToGram;
 const double ttbInOz = 3.75;
 const double kiloInGram = 1000;
+const Duration marketTimeout = Duration(seconds: 10);
+
 
 final liveRatesProvider =
 NotifierProvider<LiveRatesNotifier, LiveRatesState>(
   LiveRatesNotifier.new,
 );
 
+double _jitter(double value) {
+  final delta = (value * 0.00005); // 0.005% movement
+  return value + (DateTime.now().millisecond.isEven ? delta : -delta);
+}
+
+
 class LiveRatesNotifier extends Notifier<LiveRatesState> {
   Timer? _updateTimer;
   WebSocketChannel? _channel;
   bool _initialized = false;
   bool _isReconnecting = false;
+
+  bool _marketWasActive = true;
+
 
   double _xauUsd = 0;
   double _xagUsd = 0;
@@ -51,11 +62,29 @@ class LiveRatesNotifier extends Notifier<LiveRatesState> {
   }
 
   void _dispose() {
+
     _updateTimer?.cancel();
     _channel?.sink.close();
     _channel = null;
     _isReconnecting = false;
   }
+  bool get _isWeekend {
+    final now = DateTime.now();
+    return now.weekday == DateTime.saturday ||
+        now.weekday == DateTime.sunday;
+  }
+
+  bool get _isMarketActive {
+    if (_isWeekend) return false;
+
+    if (_lastDataReceivedTime == null) return false;
+
+    return DateTime.now()
+        .difference(_lastDataReceivedTime!) <
+        const Duration(seconds: 10);
+  }
+
+
 
   void _connectWebSocket() {
     try {
@@ -81,9 +110,11 @@ class LiveRatesNotifier extends Notifier<LiveRatesState> {
             (message) {
               if (!ref.mounted) return;
 
+              print(message);
           try {
             final data = json.decode(message);
 
+            print("khan $data");
             if (data['type'] == 'price' && data['prices'] is Map) {
               _lastDataReceivedTime = DateTime.now();
 
@@ -94,8 +125,10 @@ class LiveRatesNotifier extends Notifier<LiveRatesState> {
               final low = priceItem['low'];
 
               if (symbol.contains('XAU')) {
-                if (bid != null) {
+                if (bid != null && bid is num && bid > 0) {
                   _xauUsd = bid.toDouble();
+                } else if (_xauUsd == 0 && high != null && high is num && high > 0) {
+                  _xauUsd = high.toDouble(); // initialize only once
                 }
 
                 if (high != null && high is num && high > 0) {
@@ -107,8 +140,10 @@ class LiveRatesNotifier extends Notifier<LiveRatesState> {
               }
 
               if (symbol.contains('SILVER')) {
-                if (bid != null) {
+                if (bid != null && bid is num && bid > 0) {
                   _xagUsd = bid.toDouble();
+                } else if (_xagUsd == 0 && high != null && high is num && high > 0) {
+                  _xagUsd = high.toDouble();
                 }
 
                 if (high != null && high is num && high > 0) {
@@ -133,6 +168,7 @@ class LiveRatesNotifier extends Notifier<LiveRatesState> {
               _recalculateRates();
             }
           } catch (e, stackTrace) {
+            print("hi");
             // Only show error if we don't have data yet
             if (state.metals.isEmpty) {
               state = state.copyWith(
@@ -239,15 +275,43 @@ class LiveRatesNotifier extends Notifier<LiveRatesState> {
 
   void _recalculateRates() {
     // Only recalculate if we have data
-    if (state.metals.isEmpty || _xauUsd <= 0) {
+    if (state.metals.isEmpty) {
       return;
     }
 
+    if (!_isMarketActive) {
+      return;
+    }
+
+    if (!_isMarketActive) {
+      if (_marketWasActive) {
+        _marketWasActive = false;
+        state = state.copyWith(
+          error: _isWeekend
+              ? 'Market closed (Weekend)'
+              : 'Market closed',
+        );
+      }
+      return;
+    }
+
+// Market reopened
+    _marketWasActive = true;
+
     double r(double v) => double.parse(v.toStringAsFixed(2));
 
-    final goldOzUsd = _xauUsd > 0 ? _xauUsd : state.metals.firstWhere((m) => m.weight == "1 OZ" && m.name.contains("GOLD")).price;
+    final goldBase = _xauUsd > 0
+        ? _xauUsd
+        : state.metals.firstWhere((m) => m.weight == "1 OZ" && m.name.contains("GOLD")).price;
 
-    final silverOzUsd = _xagUsd > 0 ? _xagUsd : 30.0;
+    final silverBase = _xagUsd > 0 ? _xagUsd : 30.0;
+
+    final goldOzUsd =
+    _isMarketActive ? _jitter(goldBase) : goldBase;
+
+    final silverOzUsd =
+    _isMarketActive ? _jitter(silverBase) : silverBase;
+
 
     final updated = <MetalRate>[];
 
@@ -368,10 +432,13 @@ class LiveRatesNotifier extends Notifier<LiveRatesState> {
       );
     }
 
-    state = state.copyWith(
+    state = LiveRatesState(
       metals: updated,
       lastUpdated: DateTime.now(),
+      isLoading: false,
+      error: null,
     );
+
   }
 
   double _calculateHigh(double currentHigh, double newBid) {

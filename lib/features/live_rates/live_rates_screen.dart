@@ -39,6 +39,7 @@ class _LiveRatesScreenState extends ConsumerState<LiveRatesScreen>
   }
 
 
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(liveRatesProvider);
